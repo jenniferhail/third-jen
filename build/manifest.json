@@ -1,0 +1,20 @@
+{
+  "short_name": "Third Jen",
+  "name": "Wild needs a third Jen",
+  "icons": [
+    {
+      "src": "favicon-32x32-krixi.png",
+      "type": "image/png",
+      "sizes": "32x32"
+    },
+    {
+      "src": "favicon-16x16-krixi.png",
+      "type": "image/png",
+      "sizes": "16x16"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
