@@ -1,5 +1,5 @@
 // React
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, createRef } from "react";
 // CSS
 import "./app.scss";
 import styled, { css } from "styled-components";
@@ -12,12 +12,13 @@ import { gsap } from "gsap";
 function App() {
   const [items, setItems] = useState(data);
   const [index, setIndex] = useState(0);
-  // disabling the slider buttons at start and end
+  // Disabling the slider buttons at start and end
   const [prevDisabled, setPrevDisabled] = useState(false);
   const [nextDisabled, setNextDisabled] = useState(false);
 
   let x = 0;
   let sliderRef = useRef(null);
+  const counterElsRef = useRef(items.map((item) => createRef()));
 
   useEffect(() => {
     const lastIndex = items.length - 1;
@@ -26,6 +27,13 @@ function App() {
     if (index === 0) {
       setPrevDisabled(true);
       setNextDisabled(false);
+      // Animate first counter to start
+      gsap.to(counterElsRef.current[index], {
+        margin: "0 2rem 0 0.4rem",
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        ease: "power4.out",
+        duration: 0.5,
+      });
     }
     // Enable both btns if slide isn't first or last
     if (index > 0) {
@@ -39,22 +47,48 @@ function App() {
     }
   }, [index, items]);
 
-  // Slide movement
-  const moveSlides = (dir) => {
-    setIndex(index + dir);
-    x = (index + dir) * 100 * -1;
+  // Animations
+  const animate = (dir) => {
+    let newIndex = index + dir;
+    setIndex(newIndex);
+    x = newIndex * 100 * -1;
 
+    // Slide movement
     gsap.to(sliderRef, {
       xPercent: x,
-      duration: 0.5,
       ease: "power4.out",
+      duration: 0.5,
     });
+
+    // Counter movement
+    gsap.to(counterElsRef.current[newIndex], {
+      margin: "0 2rem 0 0.4rem",
+      backgroundColor: "rgba(255, 255, 255, 1)",
+      ease: "power4.out",
+      duration: 0.5,
+    });
+    if (dir === 1) {
+      gsap.to(counterElsRef.current[index], {
+        margin: "0 0.4rem",
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        ease: "power4.out",
+        duration: 0.5,
+      });
+    }
+    if (dir === -1) {
+      gsap.to(counterElsRef.current[index], {
+        margin: "0 0.4rem",
+        backgroundColor: "rgba(255, 255, 255, 0.3)",
+        ease: "power4.out",
+        duration: 0.5,
+      });
+    }
   };
 
   return (
-    <main className="app">
-      <div className="slider">
-        <div className="slide-wrapper" ref={(el) => (sliderRef = el)}>
+    <Container>
+      <Slider>
+        <SlideWrapper ref={(el) => (sliderRef = el)}>
           {items.map((item, itemIndex) => {
             const { id, src, alt } = item;
             let position = "";
@@ -65,12 +99,12 @@ function App() {
               position = " visited";
             }
             return (
-              <div key={id} className={`slide${position}`}>
+              <Slide key={id} className={position}>
                 <img src={src} alt={alt} />
-              </div>
+              </Slide>
             );
           })}
-        </div>
+        </SlideWrapper>
         <Counters>
           {items.map((item, itemIndex) => {
             let position = "";
@@ -80,7 +114,13 @@ function App() {
             if (itemIndex < index) {
               position = "visited";
             }
-            return <Counter key={item.id} position={position}></Counter>;
+            return (
+              <Counter
+                key={item.id}
+                position={position}
+                ref={(el) => (counterElsRef.current[itemIndex] = el)}
+              ></Counter>
+            );
           })}
         </Counters>
         <Controls>
@@ -89,7 +129,7 @@ function App() {
             prev
             className="btn"
             disabled={prevDisabled}
-            onClick={() => moveSlides(-1)}
+            onClick={() => animate(-1)}
           >
             <img src="./arrow.svg" alt="View previous slide" />
           </Button>
@@ -98,15 +138,57 @@ function App() {
             next
             className="btn"
             disabled={nextDisabled}
-            onClick={() => moveSlides(1)}
+            onClick={() => animate(1)}
           >
             <img src="./arrow.svg" alt="View next slide" />
           </Button>
         </Controls>
-      </div>
-    </main>
+      </Slider>
+    </Container>
   );
 }
+
+// Styled Components - General
+const Container = styled.main`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+const Slider = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 59rem;
+  height: 100%;
+  max-height: 68rem;
+  overflow: hidden;
+`;
+
+const SlideWrapper = styled.div`
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 100%;
+`;
+
+const Slide = styled.div`
+  width: 100%;
+  height: 100%;
+  picture {
+    display: block;
+  }
+  img {
+    display: block;
+    width: 100vw;
+    max-width: 59rem;
+    height: 100vh;
+    min-height: 40rem;
+    max-height: 68rem;
+    object-fit: cover;
+  }
+`;
 
 // Styled Components - Counters
 const Counters = styled.div`
@@ -127,18 +209,6 @@ const Counter = styled.div`
   margin: 0 0.4rem;
   background-color: rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  transition: margin 500ms ease;
-  ${(props) =>
-    props.position === "active" &&
-    css`
-      margin: 0 2rem 0 0.4rem;
-      background-color: rgba(255, 255, 255, 1);
-    `}
-  ${(props) =>
-    props.position === "visited" &&
-    css`
-      background-color: rgba(255, 255, 255, 1);
-    `}
 `;
 
 // Styled Components - Buttons
