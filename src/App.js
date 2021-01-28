@@ -159,8 +159,10 @@ const Button = styled.button`
   border: 1px solid rgba(0, 0, 0, 0.075);
   opacity: 1;
   transition: background-color 400ms ease;
-  &:hover {
+  &:hover,
+  &:focus {
     background-color: #f9f9f9;
+    outline: none;
   }
   img {
     width: 1.6rem;
