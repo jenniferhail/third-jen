@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useRef } from "react";
 // CSS
 import "./app.scss";
+import styled, { css } from "styled-components";
 // Data
 import { data } from "./data";
 // Animations
 import { gsap } from "gsap";
+// import Button from "./styled";
 
 function App() {
   const [items, setItems] = useState(data);
@@ -15,13 +17,11 @@ function App() {
   const [nextDisabled, setNextDisabled] = useState(false);
 
   let x = 0;
-  // let sliderRef = [];
-  let slider = useRef(null);
-  // let slidesRef = [];
-  let slides = useRef(null);
+  let sliderRef = useRef(null);
 
   useEffect(() => {
     const lastIndex = items.length - 1;
+
     // Disable prev btn at last slide
     if (index === 0) {
       setPrevDisabled(true);
@@ -39,28 +39,22 @@ function App() {
     }
   }, [index, items]);
 
-  // Counter animation
-  const moveDots = () => {
-    console.log("moveDots");
-  };
-
   // Slide movement
   const moveSlides = (dir) => {
     setIndex(index + dir);
     x = (index + dir) * 100 * -1;
 
-    gsap.to(slider, {
+    gsap.to(sliderRef, {
       xPercent: x,
-      duration: 0.6,
+      duration: 0.5,
+      ease: "power4.out",
     });
-
-    moveDots();
   };
 
   return (
     <main className="app">
       <div className="slider">
-        <div className="slide-wrapper" ref={(el) => (slider = el)}>
+        <div className="slide-wrapper" ref={(el) => (sliderRef = el)}>
           {items.map((item, itemIndex) => {
             const { id, src, alt } = item;
             let position = "";
@@ -71,49 +65,129 @@ function App() {
               position = " visited";
             }
             return (
-              <div
-                key={id}
-                className={`slide${position}`}
-                ref={(el) => (slides = el)}
-              >
+              <div key={id} className={`slide${position}`}>
                 <img src={src} alt={alt} />
               </div>
             );
           })}
         </div>
-        <div className="counters">
+        <Counters>
           {items.map((item, itemIndex) => {
             let position = "";
             if (itemIndex === index) {
-              position = " active";
+              position = "active";
             }
             if (itemIndex < index) {
-              position = " visited";
+              position = "visited";
             }
-            return <div key={item.id} className={`counter${position}`}></div>;
+            return <Counter key={item.id} position={position}></Counter>;
           })}
-        </div>
-        <div className="controls">
-          <button
+        </Counters>
+        <Controls>
+          <Button
             type="button"
-            className="prev btn"
+            prev
+            className="btn"
             disabled={prevDisabled}
             onClick={() => moveSlides(-1)}
           >
             <img src="./arrow.svg" alt="View previous slide" />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="next btn"
+            next
+            className="btn"
             disabled={nextDisabled}
             onClick={() => moveSlides(1)}
           >
             <img src="./arrow.svg" alt="View next slide" />
-          </button>
-        </div>
+          </Button>
+        </Controls>
       </div>
     </main>
   );
 }
+
+// Styled Components - Counters
+const Counters = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  height: 7rem;
+  padding-left: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+const Counter = styled.div`
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: 0 0.4rem;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transition: margin 500ms ease;
+  ${(props) =>
+    props.position === "active" &&
+    css`
+      margin: 0 2rem 0 0.4rem;
+      background-color: rgba(255, 255, 255, 1);
+    `}
+  ${(props) =>
+    props.position === "visited" &&
+    css`
+      background-color: rgba(255, 255, 255, 1);
+    `}
+`;
+
+// Styled Components - Buttons
+const Button = styled.button`
+  margin: 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+
+  width: 7rem;
+  height: 7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.075);
+  opacity: 1;
+  transition: background-color 400ms ease;
+  &:hover {
+    background-color: #f9f9f9;
+  }
+  img {
+    width: 1.6rem;
+  }
+  &:disabled {
+    img {
+      opacity: 0.5;
+    }
+  }
+  ${(props) =>
+    props.prev &&
+    css`
+      transform: scaleX(-1);
+    `}
+  ${(props) =>
+    props.next &&
+    css`
+      border-left: none;
+    `}
+`;
+const Controls = styled.div`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: nowrap;
+`;
 
 export default App;
