@@ -1,5 +1,5 @@
 // React
-import React, { useState, useEffect, useRef, createRef } from "react";
+import React, { useState, useEffect, useRef, createRef, Suspense } from "react";
 // CSS
 import "./app.scss";
 import styled, { css } from "styled-components";
@@ -7,7 +7,6 @@ import styled, { css } from "styled-components";
 import { data } from "./data";
 // Animations
 import { gsap } from "gsap";
-// import Button from "./styled";
 
 function App() {
   const [items, setItems] = useState(data);
@@ -57,7 +56,7 @@ function App() {
     gsap.to(sliderRef, {
       xPercent: x,
       ease: "power4.out",
-      duration: 0.5,
+      duration: 0.6,
     });
 
     // Counter movement
@@ -65,14 +64,14 @@ function App() {
       margin: "0 2rem 0 0.4rem",
       backgroundColor: "rgba(255, 255, 255, 1)",
       ease: "power4.out",
-      duration: 0.5,
+      duration: 0.6,
     });
     if (dir === 1) {
       gsap.to(counterElsRef.current[index], {
         margin: "0 0.4rem",
         backgroundColor: "rgba(255, 255, 255, 1)",
         ease: "power4.out",
-        duration: 0.5,
+        duration: 0.6,
       });
     }
     if (dir === -1) {
@@ -80,7 +79,7 @@ function App() {
         margin: "0 0.4rem",
         backgroundColor: "rgba(255, 255, 255, 0.3)",
         ease: "power4.out",
-        duration: 0.5,
+        duration: 0.6,
       });
     }
   };
@@ -89,21 +88,23 @@ function App() {
     <Container>
       <Slider>
         <SlideWrapper ref={(el) => (sliderRef = el)}>
-          {items.map((item, itemIndex) => {
-            const { id, src, alt } = item;
-            let position = "";
-            if (itemIndex === index) {
-              position = " active";
-            }
-            if (itemIndex < index) {
-              position = " visited";
-            }
-            return (
-              <Slide key={id} className={position}>
-                <img src={src} alt={alt} />
-              </Slide>
-            );
-          })}
+          <Suspense>
+            {items.map((item, itemIndex) => {
+              const { id, src, alt } = item;
+              let position = "";
+              if (itemIndex === index) {
+                position = " active";
+              }
+              if (itemIndex < index) {
+                position = " visited";
+              }
+              return (
+                <Slide key={id} className={position}>
+                  <img src={src} alt={alt} />
+                </Slide>
+              );
+            })}
+          </Suspense>
         </SlideWrapper>
         <Counters>
           {items.map((item, itemIndex) => {
@@ -162,6 +163,7 @@ const Slider = styled.div`
   width: 100%;
   max-width: 59rem;
   height: 100%;
+  min-height: 40rem;
   max-height: 68rem;
   overflow: hidden;
 `;
