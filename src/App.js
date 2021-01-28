@@ -7,6 +7,8 @@ import styled, { css } from "styled-components";
 import { data } from "./data";
 // Animations
 import { gsap } from "gsap";
+import { Draggable, InertiaPlugin } from "gsap/all";
+gsap.registerPlugin(Draggable, InertiaPlugin);
 
 function App() {
   const [items, setItems] = useState(data);
@@ -18,6 +20,7 @@ function App() {
   let x = 0;
   let sliderRef = useRef(null);
   const counterElsRef = useRef(items.map((item) => createRef()));
+  const gridWidth = 590;
 
   useEffect(() => {
     const lastIndex = items.length - 1;
@@ -46,15 +49,149 @@ function App() {
     }
   }, [index, items]);
 
+  // Make slider draggable
+  const createDraggable = () => {
+    Draggable.create(
+      sliderRef,
+      {
+        type: "xPercent",
+        inertia: true,
+        zIndexBoost: false,
+        bounds: {
+          left: -(gridWidth * (items.length - 1)),
+          width: gridWidth * items.length,
+        },
+        snap: {
+          x: function (endValue) {
+            let snapPoint = Math.round(endValue / gridWidth) * gridWidth;
+            return snapPoint;
+          },
+        },
+        throwProps: true,
+        onDragEnd: function () {
+          let endX = this.endX;
+          let startX = this.startX;
+          calibrate(startX, endX);
+        },
+        allowNativeTouchScrolling: false,
+      },
+      []
+    );
+  };
+
+  const calibrate = (startVal, endVal) => {
+    let startIndex =
+      ((Math.round(startVal / gridWidth) * gridWidth) / 590) * -1;
+    let endIndex = ((Math.round(endVal / gridWidth) * gridWidth) / 590) * -1;
+    let difference;
+    // console.log(startIndex, endIndex);
+    setIndex(endIndex);
+
+    if (startVal > endVal) {
+      difference = endIndex - startIndex;
+      // Next
+      if (difference > 1) {
+        // which indexes did I pass over
+        // console.log("next difference", startIndex, endIndex);
+        for (let i = startIndex; i <= endIndex; i++) {
+          gsap.to(counterElsRef.current[i], {
+            margin: "0 0.4rem",
+            backgroundColor: "rgba(255, 255, 255, 1)",
+            ease: "power4.out",
+            duration: 0.6,
+          });
+        }
+        gsap.to(counterElsRef.current[endIndex], {
+          margin: "0 2rem 0 0.4rem",
+          backgroundColor: "rgba(255, 255, 255, 1)",
+          ease: "power4.out",
+          duration: 0.6,
+        });
+      } else {
+        syncControls(1, endIndex);
+      }
+    } else if (startVal === endVal) {
+      // Do nothing
+    } else if (startVal < endVal) {
+      difference = startIndex - endIndex;
+      // Prev: startVal < endVal
+      if (difference > 1) {
+        // Find the indexes we passed over
+        // console.log("prev difference", startIndex, endIndex);
+        for (let i = startIndex; i >= endIndex; i--) {
+          gsap.to(counterElsRef.current[i], {
+            margin: "0 0.4rem",
+            backgroundColor: "rgba(255, 255, 255, 0.3)",
+            ease: "power4.out",
+            duration: 0.6,
+          });
+        }
+        if (endIndex === 0) {
+          gsap.to(counterElsRef.current[0], {
+            margin: "0 2rem 0 0.4rem",
+            backgroundColor: "rgba(255, 255, 255, 1)",
+            ease: "power4.out",
+            duration: 0.6,
+          });
+        } else {
+          gsap.to(counterElsRef.current[0], {
+            backgroundColor: "rgba(255, 255, 255, 1)",
+            ease: "power4.out",
+            duration: 0.6,
+          });
+          gsap.to(counterElsRef.current[endIndex], {
+            margin: "0 2rem 0 0.4rem",
+            backgroundColor: "rgba(255, 255, 255, 1)",
+            ease: "power4.out",
+            duration: 0.6,
+          });
+        }
+      } else {
+        syncControls(-1, endIndex);
+      }
+    }
+  };
+
+  const syncControls = (dir, endIndex) => {
+    let thisIndex = endIndex - dir;
+    // console.log("thisIndex: " + thisIndex, "endIndex: " + endIndex);
+
+    // Counter movement
+    gsap.to(counterElsRef.current[endIndex], {
+      margin: "0 2rem 0 0.4rem",
+      backgroundColor: "rgba(255, 255, 255, 1)",
+      ease: "power4.out",
+      duration: 0.6,
+    });
+    if (dir === 1) {
+      gsap.to(counterElsRef.current[thisIndex], {
+        margin: "0 0.4rem",
+        backgroundColor: "rgba(255, 255, 255, 1)",
+        ease: "power4.out",
+        duration: 0.6,
+      });
+    }
+    if (dir === -1) {
+      gsap.to(counterElsRef.current[thisIndex], {
+        margin: "0 0.4rem",
+        backgroundColor: "rgba(255, 255, 255, 0.3)",
+        ease: "power4.out",
+        duration: 0.6,
+      });
+    }
+  };
+
   // Animations
   const animate = (dir) => {
     let newIndex = index + dir;
+    // console.log("index: " + index, "newIndex: " + newIndex);
     setIndex(newIndex);
-    x = newIndex * 100 * -1;
+    x = newIndex * gridWidth * -1;
+    // console.log("x: " + x);
 
     // Slide movement
     gsap.to(sliderRef, {
-      xPercent: x,
+      x: x,
       ease: "power4.out",
       duration: 0.6,
     });
@@ -83,6 +220,10 @@ function App() {
       });
     }
   };
+
+  useEffect(() => {
+    createDraggable();
+  }, []);
 
   return (
     <Container>
