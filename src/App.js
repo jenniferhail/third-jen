@@ -1,5 +1,5 @@
 // React
-import React, { useState, useEffect, useRef, createRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, createRef } from "react";
 // CSS
 import "./app.scss";
 import styled, { css } from "styled-components";
@@ -88,23 +88,21 @@ function App() {
     <Container>
       <Slider>
         <SlideWrapper ref={(el) => (sliderRef = el)}>
-          <Suspense>
-            {items.map((item, itemIndex) => {
-              const { id, src, alt } = item;
-              let position = "";
-              if (itemIndex === index) {
-                position = " active";
-              }
-              if (itemIndex < index) {
-                position = " visited";
-              }
-              return (
-                <Slide key={id} className={position}>
-                  <img src={src} alt={alt} />
-                </Slide>
-              );
-            })}
-          </Suspense>
+          {items.map((item, itemIndex) => {
+            const { id, src, alt } = item;
+            let position = "";
+            if (itemIndex === index) {
+              position = " active";
+            }
+            if (itemIndex < index) {
+              position = " visited";
+            }
+            return (
+              <Slide key={id} className={position}>
+                <img src={src} alt={alt} />
+              </Slide>
+            );
+          })}
         </SlideWrapper>
         <Counters>
           {items.map((item, itemIndex) => {
